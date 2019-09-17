@@ -114,7 +114,12 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   // Update camera model
   model_.fromCameraInfo(info_msg);
 
-  if (depth_msg->encoding == enc::TYPE_16UC1)
+
+  // Tests showed that this if-statement is not needed. The encoding of
+  // the incoming depth-image is "mono16" and here TYPE_32FC1 would be
+  // required.
+  
+  if (true)
   {
     convert<uint16_t>(depth_msg, cloud_msg, model_);
   }
