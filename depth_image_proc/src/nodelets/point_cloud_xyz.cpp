@@ -103,6 +103,11 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
 {
   PointCloud::Ptr cloud_msg(new PointCloud);
   cloud_msg->header = depth_msg->header;
+  //cloud_msg->header.stamp = cloud_msg->header.stamp + 34.182;
+  double secs =cloud_msg->header.stamp.toSec();
+  secs = secs + 34.182;
+  ros::Time newTime(secs);
+  cloud_msg->header.stamp = newTime;
   cloud_msg->height = depth_msg->height;
   cloud_msg->width  = depth_msg->width;
   cloud_msg->is_dense = false;
