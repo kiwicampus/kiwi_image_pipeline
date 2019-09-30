@@ -34,6 +34,7 @@
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <boost/thread.hpp>
@@ -107,6 +108,28 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   double secs =cloud_msg->header.stamp.toSec();
   secs = secs + 34.182;
   ros::Time newTime(secs);
+
+  ros::WallTime start_pointcloud_generation, end_pointcloud_generation;
+  start_pointcloud_generation = ros::WallTime::now();
+
+  //Median filtering.
+  cv_bridge::CvImagePtr cv_image_ptr; //Boost shared pointer to CvImage.
+  cv_image_ptr = cv_bridge::toCvCopy(depth_msg,
+    sensor_msgs::image_encodings::MONO16);
+  sensor_msgs::Image image_msg;
+  cv_bridge::CvImage cv_image;
+  cv::Mat image_filtered(depth_msg->height, depth_msg->width, CV_16UC1,
+    cv::Scalar(0));
+
+  cv::medianBlur(cv_image_ptr->image, image_filtered, 3);
+
+  cv_image = cv_bridge::CvImage(depth_msg->header,
+    sensor_msgs::image_encodings::MONO16, image_filtered);
+  cv_image.toImageMsg(image_msg);
+
+  sensor_msgs::ImageConstPtr image_const_ptr(
+    new sensor_msgs::Image(image_msg));
+  
   cloud_msg->header.stamp = newTime;
   cloud_msg->height = depth_msg->height;
   cloud_msg->width  = depth_msg->width;
@@ -121,12 +144,13 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
 
 
   // Tests showed that this if-statement is not needed. The encoding of
-  // the incoming depth-image is "mono16" and here TYPE_32FC1 would be
+  // the incoming depth-image is "mono16" and here TYPE_16FC1 would be
   // required.
   
   if (true)
   {
-    convert<uint16_t>(depth_msg, cloud_msg, model_);
+    convert<uint16_t>(image_const_ptr, cloud_msg, model_);
+    //convert<uint16_t>(depth_msg, cloud_msg, model_);
   }
   else if (depth_msg->encoding == enc::TYPE_32FC1)
   {
@@ -139,6 +163,9 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   }
 
   pub_point_cloud_.publish (cloud_msg);
+  end_pointcloud_generation = ros::WallTime::now();
+  double execution_time = (end_pointcloud_generation - start_pointcloud_generation).toNSec() * 1e-6;
+  ROS_WARN_STREAM("pointcloud generation (ms): " << execution_time);
 }
 
 } // namespace depth_image_proc
