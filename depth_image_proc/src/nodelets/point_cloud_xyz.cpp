@@ -106,7 +106,7 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   cloud_msg->header = depth_msg->header;
   //cloud_msg->header.stamp = cloud_msg->header.stamp + 34.182;
   double secs =cloud_msg->header.stamp.toSec();
-  secs = secs + 34.182;
+  //secs = secs + 34.182;
   ros::Time newTime(secs);
 
   ros::WallTime start_pointcloud_generation, end_pointcloud_generation;
@@ -121,7 +121,7 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   cv::Mat image_filtered(depth_msg->height, depth_msg->width, CV_16UC1,
     cv::Scalar(0));
 
-  cv::medianBlur(cv_image_ptr->image, image_filtered, 3);
+  cv::medianBlur(cv_image_ptr->image, image_filtered, 5);
 
   cv_image = cv_bridge::CvImage(depth_msg->header,
     sensor_msgs::image_encodings::MONO16, image_filtered);
