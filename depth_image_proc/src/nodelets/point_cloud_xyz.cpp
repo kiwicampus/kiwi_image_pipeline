@@ -165,7 +165,7 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   pub_point_cloud_.publish (cloud_msg);
   end_pointcloud_generation = ros::WallTime::now();
   double execution_time = (end_pointcloud_generation - start_pointcloud_generation).toNSec() * 1e-6;
-  ROS_WARN_STREAM("pointcloud generation (ms): " << execution_time);
+  // ROS_WARN_STREAM("pointcloud generation (ms): " << execution_time);
 }
 
 } // namespace depth_image_proc
