@@ -104,13 +104,6 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
 {
   PointCloud::Ptr cloud_msg(new PointCloud);
   cloud_msg->header = depth_msg->header;
-  //cloud_msg->header.stamp = cloud_msg->header.stamp + 34.182;
-  double secs =cloud_msg->header.stamp.toSec();
-  //secs = secs + 34.182;
-  ros::Time newTime(secs);
-
-  ros::WallTime start_pointcloud_generation, end_pointcloud_generation;
-  start_pointcloud_generation = ros::WallTime::now();
 
   //Median filtering.
   cv_bridge::CvImagePtr cv_image_ptr; //Boost shared pointer to CvImage.
@@ -130,7 +123,6 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   sensor_msgs::ImageConstPtr image_const_ptr(
     new sensor_msgs::Image(image_msg));
   
-  cloud_msg->header.stamp = newTime;
   cloud_msg->height = depth_msg->height;
   cloud_msg->width  = depth_msg->width;
   cloud_msg->is_dense = false;
@@ -142,7 +134,6 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   // Update camera model
   model_.fromCameraInfo(info_msg);
 
-
   // Tests showed that this if-statement is not needed. The encoding of
   // the incoming depth-image is "mono16" and here TYPE_16FC1 would be
   // required.
@@ -150,7 +141,6 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   if (true)
   {
     convert<uint16_t>(image_const_ptr, cloud_msg, model_);
-    //convert<uint16_t>(depth_msg, cloud_msg, model_);
   }
   else if (depth_msg->encoding == enc::TYPE_32FC1)
   {
@@ -163,9 +153,6 @@ void PointCloudXyzNodelet::depthCb(const sensor_msgs::ImageConstPtr& depth_msg,
   }
 
   pub_point_cloud_.publish (cloud_msg);
-  end_pointcloud_generation = ros::WallTime::now();
-  double execution_time = (end_pointcloud_generation - start_pointcloud_generation).toNSec() * 1e-6;
-  // ROS_WARN_STREAM("pointcloud generation (ms): " << execution_time);
 }
 
 } // namespace depth_image_proc
